@@ -85,4 +85,9 @@ export class AuthService {
             },
         });
     }
+
+    // only for a device where you triggered Logout
+    deleteRefreshToken(token: string) {
+        return this.prismaService.token.delete({ where: { token } });
+    }
 }
