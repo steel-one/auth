@@ -1,3 +1,5 @@
+import { JwtPayload } from '@auth/interfaces';
+import { CurrentUser } from '@common/decorators';
 import {
     Body,
     ClassSerializerInterceptor,
@@ -33,8 +35,8 @@ export class UserController {
     }
 
     @Delete(':id')
-    async deleteUser(@Param('id', ParseUUIDPipe) id: string) {
-        return this.userService.delete(id);
+    async deleteUser(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
+        return this.userService.delete(id, user);
     }
 
     @UseInterceptors(ClassSerializerInterceptor)
