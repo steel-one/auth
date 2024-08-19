@@ -1,4 +1,4 @@
-import { Cookie } from '@common/decorators';
+import { Cookie, UserAgent } from '@common/decorators';
 import {
     BadRequestException,
     Body,
@@ -34,8 +34,8 @@ export class AuthController {
     }
 
     @Post('login')
-    async login(@Body() dto: LoginDto, @Res() res: Response) {
-        const tokens = await this.authService.login(dto);
+    async login(@Body() dto: LoginDto, @Res() res: Response, @UserAgent() agent: string) {
+        const tokens = await this.authService.login(dto, agent);
         if (!tokens) {
             throw new BadRequestException(`Не получилось войти с ${JSON.stringify(dto)}`);
         }
@@ -43,11 +43,11 @@ export class AuthController {
     }
 
     @Get('refresh-tokens') // to upsert refresh token in DB
-    async refreshTokens(@Cookie(REFRESH_TOKEN) refreshToken: string, @Res() res: Response) {
+    async refreshTokens(@Cookie(REFRESH_TOKEN) refreshToken: string, @Res() res: Response, @UserAgent() agent: string) {
         if (!refreshToken) {
             throw new UnauthorizedException();
         }
-        const tokens = await this.authService.refreshTokens(refreshToken);
+        const tokens = await this.authService.refreshTokens(refreshToken, agent);
         if (!tokens) {
             throw new UnauthorizedException();
         }
