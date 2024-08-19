@@ -18,9 +18,11 @@ import { UserService } from './user.service';
 export class UserController {
     constructor(private readonly userService: UserService) {}
 
+    @UseInterceptors(ClassSerializerInterceptor)
     @Post()
-    createUser(@Body() dto) {
-        return this.userService.save(dto);
+    async createUser(@Body() dto) {
+        const user = await this.userService.save(dto);
+        return new UserResponse(user);
     }
 
     @UseInterceptors(ClassSerializerInterceptor)
