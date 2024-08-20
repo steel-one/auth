@@ -1,6 +1,6 @@
 import { RolesGuard } from '@auth/guards/roles.guard';
 import { JwtPayload } from '@auth/interfaces';
-import { CurrentUser, Roles } from '@common/decorators';
+import { CurrentUser } from '@common/decorators';
 import {
     Body,
     ClassSerializerInterceptor,
@@ -14,7 +14,7 @@ import {
     UseGuards,
     UseInterceptors,
 } from '@nestjs/common';
-import { Role, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { UserResponse } from './responses';
 import { UserService } from './user.service';
 
@@ -49,7 +49,6 @@ export class UserController {
     }
 
     @UseGuards(RolesGuard)
-    @Roles(Role.ADMIN)
     @Get()
     me(@CurrentUser() user: JwtPayload) {
         return user;
