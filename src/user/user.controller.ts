@@ -23,22 +23,23 @@ export class UserController {
     constructor(private readonly userService: UserService) {}
 
     @UseInterceptors(ClassSerializerInterceptor)
-    @Post()
-    async createUser(@Body() dto) {
-        const user = await this.userService.save(dto);
-        return new UserResponse(user);
-    }
-
-    @UseInterceptors(ClassSerializerInterceptor)
     @Get(':idOrEmail')
     async findOneUser(@Param('idOrEmail') idOrEmail: string) {
         const user = await this.userService.findOne(idOrEmail);
         return new UserResponse(user);
     }
 
-    @Delete(':id')
-    async deleteUser(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
-        return this.userService.delete(id, user);
+    @UseGuards(RolesGuard)
+    @Get()
+    me(@CurrentUser() user: JwtPayload) {
+        return user;
+    }
+
+    @UseInterceptors(ClassSerializerInterceptor)
+    @Post()
+    async createUser(@Body() dto) {
+        const user = await this.userService.save(dto);
+        return new UserResponse(user);
     }
 
     @UseInterceptors(ClassSerializerInterceptor)
@@ -48,9 +49,8 @@ export class UserController {
         return new UserResponse(user);
     }
 
-    @UseGuards(RolesGuard)
-    @Get()
-    me(@CurrentUser() user: JwtPayload) {
-        return user;
+    @Delete(':id')
+    async deleteUser(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
+        return this.userService.delete(id, user);
     }
 }
