@@ -7,12 +7,17 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 
 @Module({
-    imports: [UserModule, PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true })],
-    providers: [
-        {
-            provide: APP_GUARD,
-            useClass: JwtAuthGuard,
-        },
-    ],
+  imports: [
+    UserModule,
+    PrismaModule,
+    AuthModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}
