@@ -36,7 +36,7 @@ export class AuthService {
     return this.generateTokens(user, agent);
   }
 
-  async register(dto: RegisterDto) {
+  async singUp(dto: RegisterDto) {
     const user: User = await this.userService
       .findOne(dto.email)
       .catch((err) => {

@@ -39,9 +39,9 @@ export class AuthController {
   ) {}
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Post('register')
-  async register(@Body() dto: RegisterDto) {
-    const user = await this.authService.register(dto);
+  @Post('sing_up')
+  async singUp(@Body() dto: RegisterDto) {
+    const user = await this.authService.singUp(dto);
     if (!user) {
       throw new BadRequestException(
         `Не получается зарегистрировать пользователя с данными ${JSON.stringify(dto)}`,

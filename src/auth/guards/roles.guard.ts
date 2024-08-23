@@ -1,7 +1,8 @@
 import { ROLES_KEY } from '@common/decorators';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role } from '@prisma/client';
+import { Role, User } from '@prisma/client';
+import { UserResponse } from '@user/responses';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -12,10 +13,23 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+
+    const { body, user } = context.switchToHttp().getRequest();
+    const isSelfUpdate = this.isSelfUpdate(body, user);
+
     if (!requiredRoles) {
       return true;
     }
-    const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role) => user.roles?.includes(role));
+    if (requiredRoles.some((role) => user.roles?.includes(role))) {
+      return true;
+    }
+    if (isSelfUpdate) {
+      return true;
+    }
+    return false;
+  }
+
+  private isSelfUpdate(body: Partial<User>, user: UserResponse): boolean {
+    return body.id === user.id || body.email === user.email;
   }
 }
