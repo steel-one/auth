@@ -19,6 +19,7 @@ export class UserResponse implements User {
   isBlocked: boolean;
 
   updatedAt: Date;
+
   roles: Role[];
 
   constructor(user: User) {

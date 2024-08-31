@@ -71,8 +71,9 @@ export class AuthController {
     @Res() res: Response,
   ) {
     if (!refreshToken) {
-      res.sendStatus(HttpStatus.OK);
-      return;
+      return res.status(HttpStatus.OK).json({
+        result: 'successfully logged out',
+      });
     }
     await this.authService.deleteRefreshToken(refreshToken);
     res.cookie(REFRESH_TOKEN, '', {
@@ -80,7 +81,9 @@ export class AuthController {
       secure: true,
       expires: new Date(),
     });
-    res.sendStatus(HttpStatus.OK);
+    return res.status(HttpStatus.OK).json({
+      result: 'successfully logged out',
+    });
   }
 
   @Get('refresh-tokens') // to upsert refresh token in DB
@@ -111,7 +114,7 @@ export class AuthController {
         this.configService.get('NODE_ENV', 'development') === 'production', // http(S)
       path: '/', // to see cookie on all pages
     });
-    res.status(HttpStatus.CREATED).json({
+    return res.status(HttpStatus.CREATED).json({
       accessToken: tokens.accessToken,
     });
   }
