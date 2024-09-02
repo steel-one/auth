@@ -37,14 +37,16 @@ export class AuthService {
   ) {}
 
   async refreshTokens(refreshToken: string, agent: string): Promise<Tokens> {
-    const token = await this.prismaService.token.delete({
-      where: { token: refreshToken },
-    });
-    if (!token || new Date(token.exp) < new Date()) {
-      throw new UnauthorizedException();
+    if (refreshToken) {
+      const token = await this.prismaService.token.delete({
+        where: { token: refreshToken },
+      });
+      if (!token || new Date(token.exp) < new Date()) {
+        throw new UnauthorizedException();
+      }
+      const user = await this.userService.findOne(token.userId);
+      return this.generateTokens(user, agent);
     }
-    const user = await this.userService.findOne(token.userId);
-    return this.generateTokens(user, agent);
   }
 
   async singUp(dto: RegisterDto) {
