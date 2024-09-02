@@ -110,6 +110,7 @@ export class AuthController {
       res.status(HttpStatus.OK).json({
         result: 'Successfully logged out',
       });
+      return;
     }
     await this.authService.deleteRefreshToken(refreshToken);
     res.cookie(REFRESH_TOKEN, '', {
