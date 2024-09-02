@@ -15,13 +15,20 @@ interface ISendMail {
 
 @Injectable()
 export class MailService {
-  constructor() {}
-
   async sendUserConfirmation(user: IMailUser, link: string) {
     return this.send({
       to: user.email,
       subject: 'IPlan Registration.',
-      message: `<p>Dear, ${user.name}. To confirm your IPlan registration Please, click: ${link}</p>`,
+      message: `<p>Dear, ${user.name}. To confirm your IPlan registration, Please, click: ${link}</p>`,
+    });
+  }
+
+  async sendRecoveryInstructions(email: string, link: string, agent: string) {
+    return this.send({
+      to: email,
+      subject: 'IPlan Recovering Access.',
+      message: `<p>IPlan Recovering requested from ${agent}</p>
+      <p>To recover your IPlan access, Please, click: ${link}</p>`,
     });
   }
 
@@ -46,8 +53,7 @@ export class MailService {
       await transporter.sendMail(mailOptions);
       return true;
     } catch (error) {
-      console.error('error sending email ', error);
-      throw new InternalServerErrorException();
+      throw new InternalServerErrorException(error);
     }
   }
 }

@@ -23,6 +23,8 @@ import { Request, Response } from 'express';
 import { map, mergeMap } from 'rxjs';
 import { AuthService } from './auth.service';
 import { ConfirmDto, LoginDto, RegisterDto } from './dto';
+import { RecoverRequestDto } from './dto/recover-request.dto';
+import { RecoverDto } from './dto/recover.dto';
 import { GoogleGuard } from './guards/google.guard';
 import { YandexGuard } from './guards/yandex.guard';
 import { Tokens } from './interfaces';
@@ -52,13 +54,36 @@ export class AuthController {
 
   @Post('confirm?')
   async confirm(
-    @Body() confirmData: ConfirmDto,
+    @Body() dto: ConfirmDto,
     @Res() res: Response,
     @UserAgent() agent: string,
   ) {
-    const user = await this.authService.confirm(confirmData);
+    const user = await this.authService.confirm(dto);
     const tokens = await this.authService.generateTokens(user, agent);
-    return this.setRefreshTokenToCookies(tokens, res);
+    this.setRefreshTokenToCookies(tokens, res);
+  }
+
+  @Post('request-recovery')
+  async recoverRequest(
+    @Body() dto: RecoverRequestDto,
+    @Res() res: Response,
+    @UserAgent() agent: string,
+  ) {
+    await this.authService.requestRecovery(dto, agent);
+    res.status(HttpStatus.OK).json({
+      result: 'Recovery instructions are sent!',
+    });
+  }
+
+  @Post('recover')
+  async recover(
+    @Body() dto: RecoverDto,
+    @Res() res: Response,
+    @UserAgent() agent: string,
+  ) {
+    const user = await this.authService.recover(dto);
+    const tokens = await this.authService.generateTokens(user, agent);
+    this.setRefreshTokenToCookies(tokens, res);
   }
 
   @Post('login')
@@ -73,7 +98,7 @@ export class AuthController {
         `Не получилось войти с ${JSON.stringify(dto)}`,
       );
     }
-    return this.setRefreshTokenToCookies(tokens, res);
+    this.setRefreshTokenToCookies(tokens, res);
   }
 
   @Get('logout')
@@ -82,8 +107,8 @@ export class AuthController {
     @Res() res: Response,
   ) {
     if (!refreshToken) {
-      return res.status(HttpStatus.OK).json({
-        result: 'successfully logged out',
+      res.status(HttpStatus.OK).json({
+        result: 'Successfully logged out',
       });
     }
     await this.authService.deleteRefreshToken(refreshToken);
@@ -92,8 +117,8 @@ export class AuthController {
       secure: true,
       expires: new Date(),
     });
-    return res.status(HttpStatus.OK).json({
-      result: 'successfully logged out',
+    res.status(HttpStatus.OK).json({
+      result: 'Successfully logged out',
     });
   }
 
@@ -125,7 +150,7 @@ export class AuthController {
         this.configService.get('NODE_ENV', 'development') === 'production', // http(S)
       path: '/', // to see cookie on all pages
     });
-    return res.status(HttpStatus.CREATED).json({
+    res.status(HttpStatus.CREATED).json({
       accessToken: tokens.accessToken,
     });
   }

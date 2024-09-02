@@ -6,7 +6,9 @@ import {
   Inject,
   Injectable,
   Logger,
+  NotFoundException,
   UnauthorizedException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Provider, Token, User } from '@prisma/client';
@@ -19,6 +21,8 @@ import { add } from 'date-fns';
 import { MailService } from 'src/mail/mail.service';
 import { v4 } from 'uuid';
 import { LoginDto, RegisterDto } from './dto';
+import { RecoverRequestDto } from './dto/recover-request.dto';
+import { RecoverDto } from './dto/recover.dto';
 import { Tokens } from './interfaces';
 
 @Injectable()
@@ -88,6 +92,35 @@ export class AuthService {
         });
       return user;
     }
+  }
+
+  async requestRecovery(dto: RecoverRequestDto, agent: string) {
+    const user = await this.userService.findOne(dto.email);
+    if (user?.provider) {
+      throw new UnprocessableEntityException(`No need to reset your password because your account is social! 
+        Please use OAuth like Google, Yandex, etc!`);
+    }
+    const code = randomInt(100000).toString();
+    const link = `<a href="${process.env.UI_ENDPOINT}/password?email=${dto.email}&code=${code}&recovery=true">CONFIRM</a>`;
+    await this.cacheManager.set(dto.email, code);
+    await this.mailService.sendRecoveryInstructions(dto.email, link, agent);
+  }
+
+  async recover(dto: RecoverDto) {
+    const user: User = await this.userService
+      .findOne(dto.email, true)
+      .catch((err) => {
+        this.logger.error(err);
+        return null;
+      });
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+    const savedUser = await this.userService.save({
+      ...dto,
+      isConfirmed: true,
+    });
+    return savedUser;
   }
 
   async login(dto: LoginDto, agent: string): Promise<Tokens> {
