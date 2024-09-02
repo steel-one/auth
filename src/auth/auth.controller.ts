@@ -22,7 +22,7 @@ import { UserResponse } from '@user/responses';
 import { Request, Response } from 'express';
 import { map, mergeMap } from 'rxjs';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from './dto';
+import { ConfirmDto, LoginDto, RegisterDto } from './dto';
 import { GoogleGuard } from './guards/google.guard';
 import { YandexGuard } from './guards/yandex.guard';
 import { Tokens } from './interfaces';
@@ -50,6 +50,17 @@ export class AuthController {
     return new UserResponse(user);
   }
 
+  @Post('confirm?')
+  async confirm(
+    @Body() confirmData: ConfirmDto,
+    @Res() res: Response,
+    @UserAgent() agent: string,
+  ) {
+    const user = await this.authService.confirm(confirmData);
+    const tokens = await this.authService.generateTokens(user, agent);
+    return this.setRefreshTokenToCookies(tokens, res);
+  }
+
   @Post('login')
   async login(
     @Body() dto: LoginDto,
@@ -62,7 +73,7 @@ export class AuthController {
         `Не получилось войти с ${JSON.stringify(dto)}`,
       );
     }
-    this.setRefreshTokenToCookies(tokens, res);
+    return this.setRefreshTokenToCookies(tokens, res);
   }
 
   @Get('logout')

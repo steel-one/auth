@@ -29,6 +29,7 @@ export class UserService {
         provider: user?.provider ?? undefined,
         roles: user?.roles ?? undefined,
         isBlocked: user.isBlocked ?? undefined,
+        isConfirmed: user.isConfirmed ?? undefined,
       },
       create: {
         email: user.email,

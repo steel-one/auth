@@ -6,6 +6,10 @@ export class UserResponse implements User {
 
   email: string;
 
+  firstName: string;
+
+  lastName: string;
+
   @Exclude()
   password: string;
 
@@ -17,6 +21,9 @@ export class UserResponse implements User {
 
   @Exclude()
   isBlocked: boolean;
+
+  @Exclude()
+  isConfirmed: boolean;
 
   updatedAt: Date;
 

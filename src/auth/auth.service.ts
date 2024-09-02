@@ -1,7 +1,9 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   ConflictException,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   Logger,
   UnauthorizedException,
@@ -11,7 +13,10 @@ import { Provider, Token, User } from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
 import { UserService } from '@user/user.service';
 import { compareSync } from 'bcrypt';
+import { Cache } from 'cache-manager';
+import { randomInt } from 'crypto';
 import { add } from 'date-fns';
+import { MailService } from 'src/mail/mail.service';
 import { v4 } from 'uuid';
 import { LoginDto, RegisterDto } from './dto';
 import { Tokens } from './interfaces';
@@ -23,6 +28,8 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly prismaService: PrismaService,
+    private readonly mailService: MailService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async refreshTokens(refreshToken: string, agent: string): Promise<Tokens> {
@@ -48,10 +55,39 @@ export class AuthService {
         'Пользователь с таким email уже зарегистрирован',
       );
     }
+    const code = randomInt(100000).toString();
+    const link = `<a href="${process.env.UI_ENDPOINT}/confirm?email=${dto.email}&code=${code}">CONFIRM</a>`;
+    await this.cacheManager.set(dto.email, code);
+    await this.mailService.sendUserConfirmation(
+      { email: dto.email, code, name: dto.first_name },
+      link,
+    );
     return this.userService.save(dto).catch((err) => {
       this.logger.error(err);
       return null;
     });
+  }
+
+  async confirm(confirmData) {
+    const cachedCode = await this.cacheManager.get(confirmData.email);
+    if (cachedCode === confirmData.code) {
+      const user: User = await this.userService
+        .findOne(confirmData.email)
+        .catch((err) => {
+          this.logger.error(err);
+          return null;
+        });
+      this.userService
+        .save({
+          ...user,
+          isConfirmed: true,
+        })
+        .catch((err) => {
+          this.logger.error(err);
+          return null;
+        });
+      return user;
+    }
   }
 
   async login(dto: LoginDto, agent: string): Promise<Tokens> {
@@ -64,10 +100,13 @@ export class AuthService {
     if (!user || !compareSync(dto.password, user.password)) {
       throw new UnauthorizedException('Не верный логин или пароль');
     }
+    if (!user?.isConfirmed) {
+      throw new UnauthorizedException('Сперва подтвердите почту пожалуйста');
+    }
     return this.generateTokens(user, agent);
   }
 
-  private async generateTokens(user: User, agent: string): Promise<Tokens> {
+  async generateTokens(user: User, agent: string): Promise<Tokens> {
     const accessToken =
       'Bearer ' +
       this.jwtService.sign({

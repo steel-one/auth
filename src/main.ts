@@ -1,3 +1,4 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
@@ -12,6 +13,10 @@ async function bootstrap() {
     methods: 'GET,POST,PUT,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type,Authorization',
   });
-  await app.listen(3000);
+  app.useGlobalPipes(new ValidationPipe());
+  const port = process.env.PORT;
+  await app.listen(port);
+  console.log(`Microservice running`);
+  console.log(`http: ${port}`);
 }
 bootstrap();
