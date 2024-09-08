@@ -41,7 +41,7 @@ export class AuthController {
   ) {}
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Post('sing_up')
+  @Post('sing-up')
   async singUp(@Body() dto: RegisterDto) {
     const user = await this.authService.singUp(dto);
     if (!user) {

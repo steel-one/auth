@@ -25,6 +25,8 @@ export class UserService {
         email: user.email,
       },
       update: {
+        firstName: user?.firstName ?? undefined,
+        lastName: user?.lastName ?? undefined,
         password: hashedPassword ?? undefined,
         provider: user?.provider ?? undefined,
         roles: user?.roles ?? undefined,
@@ -32,6 +34,8 @@ export class UserService {
         isConfirmed: user.isConfirmed ?? undefined,
       },
       create: {
+        firstName: user?.firstName ?? undefined,
+        lastName: user?.lastName ?? undefined,
         email: user.email,
         password: hashedPassword,
         provider: user?.provider,

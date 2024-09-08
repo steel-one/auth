@@ -12,12 +12,12 @@ export class RegisterDto {
   @IsString()
   @MinLength(3)
   @IsNotEmpty()
-  first_name: string;
+  firstName: string;
 
   @IsString()
   @MinLength(1)
   @IsNotEmpty()
-  last_name: string;
+  lastName: string;
 
   @IsEmail()
   @IsNotEmpty()
@@ -34,5 +34,5 @@ export class RegisterDto {
 
   @IsString()
   @Validate(IsPasswordsMatchingConstraint)
-  repeat_password: string;
+  repeatPassword: string;
 }

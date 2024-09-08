@@ -63,7 +63,7 @@ export class AuthService {
     const link = `<a href="${process.env.UI_ENDPOINT}/confirm?email=${dto.email}&code=${code}">CONFIRM</a>`;
     await this.cacheManager.set(dto.email, code);
     await this.mailService.sendUserConfirmation(
-      { email: dto.email, code, name: dto.first_name },
+      { email: dto.email, code, name: dto.firstName },
       link,
     );
     return this.userService.save(dto).catch((err) => {
