@@ -1,12 +1,18 @@
 import { JwtPayload } from '@auth/interfaces';
+import { ListDto } from '@common/serializers/common';
 import { convertToSecondsUtil } from '@common/utils';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Role, User } from '@prisma/client';
+import { Prisma, Role, User } from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
 import { genSaltSync, hashSync } from 'bcrypt';
 import { Cache } from 'cache-manager';
+
+export interface IData {
+  nodes: User[];
+  total: number;
+}
 
 @Injectable()
 export class UserService {
@@ -69,6 +75,29 @@ export class UserService {
       return user;
     }
     return user;
+  }
+
+  async findManyAndCount(payload: ListDto): Promise<IData> {
+    const query: Prisma.UserFindManyArgs = {
+      skip: 1, // +1 Skips the cursor
+      take: payload.paginate.perPage,
+      orderBy: {
+        [payload.orderBy.sort]: payload.orderBy.order,
+      },
+    };
+    if (payload?.search.length) {
+      query.where = {
+        OR: [{ id: payload?.search }, { email: payload?.search }],
+      };
+    }
+    const [nodes, total] = await this.prismaService.$transaction([
+      this.prismaService.user.findMany(query),
+      this.prismaService.user.count({ where: query.where ?? undefined }),
+    ]);
+    if (!nodes) {
+      return null;
+    }
+    return { nodes, total };
   }
 
   async delete(id: string, user: JwtPayload) {

@@ -17,9 +17,9 @@ import { STRATEGIES } from './strategies';
   imports: [
     PassportModule,
     JwtModule.registerAsync(options()),
-    UserModule,
     HttpModule,
     CacheModule.register({ ttl: 600000 }),
+    UserModule,
   ],
 })
 export class AuthModule {}

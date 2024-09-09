@@ -1,6 +1,8 @@
 import { RolesGuard } from '@auth/guards/roles.guard';
 import { JwtPayload } from '@auth/interfaces';
 import { CurrentUser, Roles } from '@common/decorators';
+import { ManyAndCountResponse } from '@common/responses';
+import { ListDto, ListDtoSerializer } from '@common/serializers/common';
 import {
   Body,
   ClassSerializerInterceptor,
@@ -14,11 +16,14 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role, User } from '@prisma/client';
-import { UserResponse } from './responses';
+import { UserForAdminResponse, UserResponse } from './responses';
 import { UserService } from './user.service';
 
-@Controller('user')
+@Controller('users')
+@ApiTags('users')
+@ApiBearerAuth()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -30,9 +35,22 @@ export class UserController {
   }
 
   @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @UseInterceptors(ClassSerializerInterceptor)
   @Get()
-  me(@CurrentUser() user: JwtPayload) {
-    return user;
+  async findMany(
+    @Param('search') search: string = '',
+    @Param('paginate') paginate: string,
+    @Param('orderBy') orderBy: string,
+  ): Promise<ManyAndCountResponse> {
+    const query = { search, paginate, orderBy };
+    const formattedParams: ListDto = await ListDtoSerializer.fromQuery(query);
+    const data = await this.userService.findManyAndCount(formattedParams);
+
+    return {
+      ...data,
+      nodes: data.nodes.map((user) => new UserForAdminResponse(user)),
+    };
   }
 
   @UseGuards(RolesGuard)
