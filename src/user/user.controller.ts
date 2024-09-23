@@ -11,13 +11,13 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
-  Post,
   Put,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Role, User } from '@prisma/client';
+import { Role } from '@prisma/client';
+import { UpdateUserDto } from './dto/update.dto';
 import { UserForAdminResponse, UserResponse } from './responses';
 import { UserService } from './user.service';
 
@@ -54,20 +54,13 @@ export class UserController {
   }
 
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
   @UseInterceptors(ClassSerializerInterceptor)
-  @Post()
-  async createUser(@Body() dto) {
-    const user = await this.userService.save(dto);
-    return new UserResponse(user);
-  }
-
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @UseInterceptors(ClassSerializerInterceptor)
-  @Put()
-  async updateUser(@Body() body: Partial<User>) {
-    const user = await this.userService.save(body);
+  @Put(':email')
+  async updateUser(
+    @Param('email', UpdateUserDto['email']) email: string,
+    @Body() dto: UpdateUserDto,
+  ) {
+    const user = await this.userService.save({ ...dto, email });
     return new UserResponse(user);
   }
 
