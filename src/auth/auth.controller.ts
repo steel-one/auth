@@ -106,18 +106,14 @@ export class AuthController {
     @Cookie(REFRESH_TOKEN) refreshToken: string,
     @Res() res: Response,
   ) {
-    if (!refreshToken) {
-      res.status(HttpStatus.OK).json({
-        result: 'Successfully logged out',
+    if (refreshToken) {
+      await this.authService.deleteRefreshToken(refreshToken);
+      res.cookie(REFRESH_TOKEN, '', {
+        httpOnly: true,
+        secure: true,
+        expires: new Date(),
       });
-      return;
     }
-    await this.authService.deleteRefreshToken(refreshToken);
-    res.cookie(REFRESH_TOKEN, '', {
-      httpOnly: true,
-      secure: true,
-      expires: new Date(),
-    });
     res.status(HttpStatus.OK).json({
       result: 'Successfully logged out',
     });

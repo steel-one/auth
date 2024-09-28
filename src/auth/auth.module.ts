@@ -1,5 +1,4 @@
 import { HttpModule } from '@nestjs/axios';
-import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -18,7 +17,6 @@ import { STRATEGIES } from './strategies';
     PassportModule,
     JwtModule.registerAsync(options()),
     HttpModule,
-    CacheModule.register({ ttl: 600000 }),
     UserModule,
   ],
 })
