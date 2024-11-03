@@ -79,7 +79,6 @@ export class UserService {
 
   async findManyAndCount(payload: ListDto): Promise<IData> {
     const query: Prisma.UserFindManyArgs = {
-      skip: 1, // +1 Skips the cursor
       take: payload.paginate.perPage,
       orderBy: {
         [payload.orderBy.sort]: payload.orderBy.order,
@@ -87,7 +86,11 @@ export class UserService {
     };
     if (payload?.search.length) {
       query.where = {
-        OR: [{ id: payload?.search }, { email: payload?.search }],
+        OR: [
+          { firstName: { contains: payload.search, mode: 'insensitive' } },
+          { lastName: { contains: payload.search, mode: 'insensitive' } },
+          { email: { contains: payload.search, mode: 'insensitive' } },
+        ],
       };
     }
     const [nodes, total] = await this.prismaService.$transaction([

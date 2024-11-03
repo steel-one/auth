@@ -12,6 +12,7 @@ import {
   Param,
   ParseUUIDPipe,
   Put,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -39,12 +40,15 @@ export class UserController {
   @UseInterceptors(ClassSerializerInterceptor)
   @Get()
   async findMany(
-    @Param('search') search: string = '',
-    @Param('paginate') paginate: string,
-    @Param('orderBy') orderBy: string,
+    @Query('search') search: string = '',
+    @Query('paginate') paginate: string,
+    @Query('orderBy') orderBy: string,
   ): Promise<ManyAndCountResponse> {
-    const query = { search, paginate, orderBy };
-    const formattedParams: ListDto = await ListDtoSerializer.fromQuery(query);
+    const formattedParams: ListDto = await ListDtoSerializer.fromQuery({
+      search,
+      paginate,
+      orderBy,
+    });
     const data = await this.userService.findManyAndCount(formattedParams);
 
     return {

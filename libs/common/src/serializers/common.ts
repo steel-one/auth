@@ -30,11 +30,17 @@ export class ListDto {
   orderBy: Order;
 }
 
+interface ISearch {
+  search: string;
+  paginate: string;
+  orderBy: string;
+}
+
 import { plainToClass } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 
 export class ListDtoSerializer {
-  static async fromQuery(query: any): Promise<ListDto> {
+  static async fromQuery(query: ISearch): Promise<ListDto> {
     const paginate = query.paginate
       ? JSON.parse(query.paginate)
       : { page: 1, perPage: 5 };
